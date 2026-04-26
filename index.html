@@ -172,10 +172,12 @@
             </div>
 
             <div class="cards-grid">
-                <div class="kpi-card blue">
+                <div class="kpi-card blue" style="position: relative;">
                     <span class="kpi-title">Resultado Líquido</span>
                     <h3 class="kpi-value" id="kpi-resultado">$ 0.00</h3>
-                    <span class="kpi-subtitle">Lucro/Prejuízo no período</span>
+                    <span class="kpi-subtitle" id="kpi-resultado-sub">Lucro/Prejuízo no período</span>
+                    
+                    <button onclick="toggleMoeda()" id="btn-moeda" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: 700; transition: 0.2s;" title="Converter Moeda">BRL 🇧🇷</button>
                 </div>
                 <div class="kpi-card">
                     <span class="kpi-title">Acertividade (Win Rate)</span>
@@ -277,14 +279,39 @@
         let chartAction = null;
         let editandoId = null;
 
+        // VARIÁVEIS PARA A COTAÇÃO
+        let cotacaoDolar = 5.0; // Fallback caso a API falhe
+        let exibirEmReal = false;
+
         window.onload = async () => {
             const hoje = new Date();
             const mesFormatado = hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0');
             document.getElementById('filtro-mes').value = mesFormatado;
             
             document.getElementById('input-data').valueAsDate = hoje;
+            
+            // Busca a cotação do dia na API
+            await buscarCotacaoDolar();
             await buscarDadosDaNuvem();
         };
+
+        // FUNÇÃO QUE CONSOME A API DE COTAÇÃO
+        async function buscarCotacaoDolar() {
+            try {
+                const response = await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL');
+                const data = await response.json();
+                cotacaoDolar = parseFloat(data.USDBRL.bid);
+            } catch (error) {
+                console.error("Erro ao buscar cotação da AwesomeAPI:", error);
+            }
+        }
+
+        // FUNÇÃO QUE ALTERNA ENTRE DÓLAR E REAL
+        function toggleMoeda() {
+            exibirEmReal = !exibirEmReal;
+            document.getElementById('btn-moeda').innerText = exibirEmReal ? "USD 🇺🇸" : "BRL 🇧🇷";
+            atualizarDashboard(); // Refaz os cálculos da tela
+        }
 
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
@@ -448,8 +475,12 @@
                 opsFiltradas = operacoes.filter(op => op.data.startsWith(mesSelecionado));
             }
 
+            const elResultado = document.getElementById('kpi-resultado');
+            const elResultadoSub = document.getElementById('kpi-resultado-sub');
+
             if (opsFiltradas.length === 0) {
-                document.getElementById('kpi-resultado').innerText = "$ 0.00";
+                elResultado.innerText = exibirEmReal ? "R$ 0,00" : "$ 0.00";
+                elResultadoSub.innerText = "0 operações no período";
                 document.getElementById('kpi-winrate').innerText = "0%";
                 document.getElementById('kpi-winrate-sub').innerText = "0 operações no período";
                 document.getElementById('kpi-volume').innerText = "$ 0.00";
@@ -475,7 +506,16 @@
                 pnlNoTempo[op.data] = (pnlNoTempo[op.data] || 0) + res;
             });
 
-            document.getElementById('kpi-resultado').innerText = formatMoney(resultadoLiquido);
+            // LÓGICA DE EXIBIÇÃO DÓLAR / REAL
+            if (exibirEmReal) {
+                const valorEmReal = resultadoLiquido * cotacaoDolar;
+                elResultado.innerText = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorEmReal);
+                elResultadoSub.innerText = `Cotação de hoje: R$ ${cotacaoDolar.toFixed(2).replace('.', ',')}`;
+            } else {
+                elResultado.innerText = formatMoney(resultadoLiquido);
+                elResultadoSub.innerText = "Lucro/Prejuízo no período";
+            }
+            
             const winRate = ((acertos / opsFiltradas.length) * 100).toFixed(1);
             document.getElementById('kpi-winrate').innerText = `${winRate}%`;
             document.getElementById('kpi-winrate-sub').innerText = `${acertos} wins de ${opsFiltradas.length} ops`;
