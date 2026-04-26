@@ -28,39 +28,49 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg);
-            margin: 0;
-            padding: 0;
-            color: var(--text-main);
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
+            font-family: 'Inter', sans-serif; background-color: var(--bg); margin: 0; padding: 0;
+            color: var(--text-main); display: flex; flex-direction: column; min-height: 100vh;
             -webkit-font-smoothing: antialiased;
         }
 
+        /* --- TELA DE LOGIN --- */
+        #auth-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg); display: flex; align-items: center; justify-content: center;
+            z-index: 9999; flex-direction: column; transition: 0.3s ease;
+        }
+        .auth-card {
+            background: var(--card-bg); padding: 40px; border-radius: 16px; border: 1px solid var(--border);
+            width: 100%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center;
+        }
+        .auth-card h2 { margin: 0 0 20px 0; font-size: 1.5rem; color: var(--text-main); }
+        .auth-card input {
+            width: 100%; box-sizing: border-box; background-color: var(--bg); color: var(--text-main);
+            padding: 12px 15px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem;
+            margin-bottom: 15px; outline: none; font-family: 'Inter';
+        }
+        .auth-card input:focus { border-color: var(--primary); }
+        .auth-btn {
+            width: 100%; background: var(--primary); color: white; border: none; padding: 12px;
+            border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: 0.2s; margin-bottom: 10px;
+        }
+        .auth-btn:hover { background: var(--primary-hover); }
+        .auth-btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+        .auth-btn-secondary:hover { background: rgba(255,255,255,0.05); color: var(--text-main); }
+
+        /* --- SISTEMA PRINCIPAL (Inicialmente oculto) --- */
+        #app-screen { display: none; flex-direction: column; width: 100%; }
+
         nav {
-            background-color: var(--card-bg);
-            border-bottom: 1px solid var(--border);
-            padding: 15px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            background-color: var(--card-bg); border-bottom: 1px solid var(--border); padding: 15px 40px;
+            display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100;
         }
-
         .logo { font-size: 1.5rem; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 10px; }
-
-        .menu-tabs { display: flex; gap: 10px; }
-        .tab-btn {
-            background: none; border: none; padding: 10px 20px; font-size: 0.95rem; font-weight: 600;
-            color: var(--text-muted); cursor: pointer; border-radius: 8px; transition: all 0.2s; font-family: 'Inter';
-        }
+        .menu-tabs { display: flex; gap: 10px; align-items: center; }
+        .tab-btn { background: none; border: none; padding: 10px 20px; font-size: 0.95rem; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: 8px; transition: 0.2s; font-family: 'Inter'; }
         .tab-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.05); }
         .tab-btn.active { background-color: rgba(99, 102, 241, 0.15); color: var(--primary); }
+        .logout-btn { font-size: 0.85rem; color: var(--danger); padding: 10px; cursor: pointer; background: none; border: none; font-weight: 600; }
 
         .container { padding: 40px; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
         .view-section { display: none; animation: fadeIn 0.4s ease; }
@@ -70,298 +80,261 @@
         .section-header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end; }
         .section-header h2 { margin: 0 0 5px 0; font-size: 1.8rem; letter-spacing: -0.02em; }
         .section-header p { margin: 0; color: var(--text-muted); font-size: 0.95rem; }
-
-        .filter-input {
-            background: var(--card-bg); border: 1px solid var(--border); color: var(--text-main);
-            padding: 10px 15px; border-radius: 8px; font-family: 'Inter'; outline: none; cursor: pointer;
-        }
+        .filter-input { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-main); padding: 10px 15px; border-radius: 8px; font-family: 'Inter'; outline: none; cursor: pointer; }
         
         .cards-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
-        .kpi-card {
-            background: var(--card-bg); padding: 25px; border-radius: 16px;
-            border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        .kpi-card.blue { background: linear-gradient(135deg, #4f46e5, #3b82f6); border: none; }
+        .kpi-card { background: var(--card-bg); padding: 25px; border-radius: 16px; border: 1px solid var(--border); }
+        .kpi-card.blue { background: linear-gradient(135deg, #4f46e5, #3b82f6); border: none; position: relative; }
         .kpi-card.blue .kpi-title, .kpi-card.blue .kpi-subtitle { color: rgba(255,255,255,0.8); }
-        
         .kpi-title { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; margin-bottom: 10px; display: block; text-transform: uppercase; letter-spacing: 0.05em; }
         .kpi-value { font-size: 2rem; font-weight: 800; margin: 0; letter-spacing: -0.02em; }
         .kpi-subtitle { font-size: 0.8rem; margin-top: 10px; color: var(--text-muted); display: block; }
-
-        .text-success { color: var(--success) !important; }
-        .text-danger { color: var(--danger) !important; }
+        .text-success { color: var(--success) !important; } .text-danger { color: var(--danger) !important; }
 
         .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-        .chart-container {
-            background: var(--card-bg); padding: 25px; border-radius: 16px;
-            border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
+        .chart-container { background: var(--card-bg); padding: 25px; border-radius: 16px; border: 1px solid var(--border); }
 
         .form-card { background: var(--card-bg); padding: 25px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 30px; }
         .form-row { display: grid; grid-template-columns: repeat(5, 1fr) auto; gap: 15px; align-items: end; }
         .input-group { display: flex; flex-direction: column; gap: 8px; }
         .input-group label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
-        
-        .input-group input, .input-group select {
-            background-color: var(--bg); color: var(--text-main);
-            padding: 12px 15px; border: 1px solid var(--border); border-radius: 8px;
-            font-size: 0.95rem; outline: none; transition: all 0.2s; font-family: 'Inter';
-        }
+        .input-group input, .input-group select { background-color: var(--bg); color: var(--text-main); padding: 12px 15px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; font-family: 'Inter'; }
         .input-group input:focus, .input-group select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99,102,241,0.2); }
-
-        .btn-add {
-            background: var(--primary); color: white; border: none; padding: 0 25px; border-radius: 8px;
-            font-weight: 600; font-size: 0.95rem; cursor: pointer; height: 44px; transition: all 0.2s; font-family: 'Inter';
-        }
-        .btn-add:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn-add { background: var(--primary); color: white; border: none; padding: 0 25px; border-radius: 8px; font-weight: 600; font-size: 0.95rem; cursor: pointer; height: 44px; }
+        .btn-add:hover { background: var(--primary-hover); }
 
         .table-container { background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; }
         table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { background-color: rgba(0,0,0,0.2); padding: 15px 20px; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
-        td { padding: 15px 20px; font-size: 0.95rem; border-bottom: 1px solid var(--border); transition: background 0.2s; }
-        tr:last-child td { border-bottom: none; }
-        tr:hover td { background-color: rgba(255,255,255,0.02); }
+        th { background-color: rgba(0,0,0,0.2); padding: 15px 20px; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        td { padding: 15px 20px; font-size: 0.95rem; border-bottom: 1px solid var(--border); }
+        tr:last-child td { border-bottom: none; } tr:hover td { background-color: rgba(255,255,255,0.02); }
         
-        .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; }
-        .badge.compra { background-color: var(--success-bg); color: var(--success); }
-        .badge.venda { background-color: var(--danger-bg); color: var(--danger); }
-        .badge.ganho { color: var(--success); }
-        .badge.perda { color: var(--danger); }
+        .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+        .badge.compra { background-color: var(--success-bg); color: var(--success); } .badge.venda { background-color: var(--danger-bg); color: var(--danger); }
+        .badge.ganho { color: var(--success); } .badge.perda { color: var(--danger); }
 
         .action-btns { display: flex; gap: 10px; }
-        .icon-btn { background: none; border: none; font-size: 1.1rem; cursor: pointer; opacity: 0.6; transition: all 0.2s; }
+        .icon-btn { background: none; border: none; font-size: 1.1rem; cursor: pointer; opacity: 0.6; }
         .icon-btn:hover { opacity: 1; transform: scale(1.1); }
-        .btn-edit:hover { color: #3b82f6; }
-        .btn-del:hover { color: var(--danger); }
+        .btn-edit:hover { color: #3b82f6; } .btn-del:hover { color: var(--danger); }
 
         #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
-        .toast {
-            background: var(--card-bg); color: var(--text-main); padding: 15px 20px; border-radius: 8px;
-            border-left: 4px solid var(--primary); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
-            font-size: 0.9rem; font-weight: 500; animation: slideIn 0.3s ease; display: flex; align-items: center; gap: 10px;
-        }
-        .toast.success { border-color: var(--success); }
-        .toast.error { border-color: var(--danger); }
+        .toast { background: var(--card-bg); color: var(--text-main); padding: 15px 20px; border-radius: 8px; border-left: 4px solid var(--primary); font-size: 0.9rem; font-weight: 500; animation: slideIn 0.3s ease; display: flex; align-items: center; gap: 10px; }
+        .toast.success { border-color: var(--success); } .toast.error { border-color: var(--danger); }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
     </style>
 </head>
 <body>
 
     <div id="toast-container"></div>
 
-    <nav>
-        <div class="logo">⚡ CryptoDash Pro</div>
-        <div class="menu-tabs">
-            <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
-            <button class="tab-btn" onclick="switchTab('registros')">Lançamentos</button>
+    <div id="auth-screen">
+        <div class="auth-card">
+            <h2>📈 CryptoDash Pro</h2>
+            <input type="email" id="auth-email" placeholder="Seu Email" required>
+            <input type="password" id="auth-senha" placeholder="Sua Senha" required>
+            <button class="auth-btn" onclick="fazerLogin()">Entrar</button>
+            <button class="auth-btn auth-btn-secondary" onclick="criarConta()">Criar Conta</button>
         </div>
-    </nav>
+    </div>
 
-    <div class="container">
-        
-        <div id="view-dashboard" class="view-section active">
-            <div class="section-header">
-                <div>
-                    <h2>Dashboard Financeiro</h2>
-                    <p>Análise completa de resultados e performance de trading</p>
+    <div id="app-screen">
+        <nav>
+            <div class="logo">⚡ CryptoDash Pro</div>
+            <div class="menu-tabs">
+                <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
+                <button class="tab-btn" onclick="switchTab('registros')">Lançamentos</button>
+                <button class="logout-btn" onclick="fazerLogout()">Sair</button>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div id="view-dashboard" class="view-section active">
+                <div class="section-header">
+                    <div><h2>Dashboard Financeiro</h2><p>Análise completa de resultados</p></div>
+                    <div><input type="month" id="filtro-mes" class="filter-input" onchange="atualizarDashboard()" title="Filtrar por Mês"></div>
                 </div>
-                <div>
-                    <input type="month" id="filtro-mes" class="filter-input" onchange="atualizarDashboard()" title="Filtrar por Mês">
+
+                <div class="cards-grid">
+                    <div class="kpi-card blue">
+                        <span class="kpi-title">Resultado Líquido</span>
+                        <h3 class="kpi-value" id="kpi-resultado">$ 0.00</h3>
+                        <span class="kpi-subtitle" id="kpi-resultado-sub">Lucro/Prejuízo no período</span>
+                        <button onclick="toggleMoeda()" id="btn-moeda" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: 700;">BRL 🇧🇷</button>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-title">Acertividade (Win Rate)</span>
+                        <h3 class="kpi-value" id="kpi-winrate">0%</h3>
+                        <span class="kpi-subtitle" id="kpi-winrate-sub">0 de 0 operações</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-title">Total Operado</span>
+                        <h3 class="kpi-value" id="kpi-volume">$ 0.00</h3>
+                        <span class="kpi-subtitle">Soma de margens</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-title">Melhor Ativo</span>
+                        <h3 class="kpi-value" id="kpi-melhor-moeda">---</h3>
+                        <span class="kpi-subtitle" id="kpi-melhor-moeda-sub">Análise do período</span>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 1rem; color: var(--text-main);">Evolução do Capital</h3>
+                        <canvas id="pnlChart" height="100"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 1rem; color: var(--text-main);">Distribuição por Ação</h3>
+                        <canvas id="actionChart" height="200"></canvas>
+                    </div>
                 </div>
             </div>
 
-            <div class="cards-grid">
-                <div class="kpi-card blue" style="position: relative;">
-                    <span class="kpi-title">Resultado Líquido</span>
-                    <h3 class="kpi-value" id="kpi-resultado">$ 0.00</h3>
-                    <span class="kpi-subtitle" id="kpi-resultado-sub">Lucro/Prejuízo no período</span>
-                    
-                    <button onclick="toggleMoeda()" id="btn-moeda" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: 700; transition: 0.2s;" title="Converter Moeda">BRL 🇧🇷</button>
+            <div id="view-registros" class="view-section">
+                <div class="section-header"><div><h2>Registros de Operação</h2><p>Gerencie seu diário</p></div></div>
+                <div class="form-card">
+                    <form id="form-trade" class="form-row" onsubmit="salvarOperacao(event)">
+                        <div class="input-group"><label>Data</label><input type="date" id="input-data" required></div>
+                        <div class="input-group"><label>Moeda</label><input type="text" id="input-moeda" style="text-transform: uppercase;" required autocomplete="off"></div>
+                        <div class="input-group"><label>Ação</label>
+                            <select id="input-acao" required><option value="COMPRA">COMPRA (Long)</option><option value="VENDA">VENDA (Short)</option></select>
+                        </div>
+                        <div class="input-group"><label>Valor ($)</label><input type="number" id="input-valor" step="0.01" min="1" required></div>
+                        <div class="input-group"><label>PnL (%)</label><input type="number" id="input-ganho" step="0.01" required></div>
+                        <button type="submit" class="btn-add" id="btn-submit">Adicionar</button>
+                    </form>
                 </div>
-                <div class="kpi-card">
-                    <span class="kpi-title">Acertividade (Win Rate)</span>
-                    <h3 class="kpi-value" id="kpi-winrate">0%</h3>
-                    <span class="kpi-subtitle" id="kpi-winrate-sub">0 de 0 operações</span>
+                <div class="table-container">
+                    <table id="tabela-operacoes">
+                        <thead><tr><th>Data</th><th>Moeda</th><th>Ação</th><th>Valor ($)</th><th>PnL (%)</th><th>Resultado</th><th>Ações</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
-                <div class="kpi-card">
-                    <span class="kpi-title">Total Operado</span>
-                    <h3 class="kpi-value" id="kpi-volume">$ 0.00</h3>
-                    <span class="kpi-subtitle">Soma de margens (Volume)</span>
-                </div>
-                <div class="kpi-card">
-                    <span class="kpi-title">Melhor Ativo</span>
-                    <h3 class="kpi-value" id="kpi-melhor-moeda">---</h3>
-                    <span class="kpi-subtitle" id="kpi-melhor-moeda-sub">Análise do período</span>
-                </div>
-            </div>
-
-            <div class="charts-grid">
-                <div class="chart-container">
-                    <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 1rem; color: var(--text-main);">Evolução do Capital (PnL Acumulado)</h3>
-                    <canvas id="pnlChart" height="100"></canvas>
-                </div>
-                <div class="chart-container">
-                    <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 1rem; color: var(--text-main);">Distribuição por Ação</h3>
-                    <canvas id="actionChart" height="200"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <div id="view-registros" class="view-section">
-            <div class="section-header">
-                <div>
-                    <h2>Registros de Operação</h2>
-                    <p>Gerencie seu diário de trading</p>
-                </div>
-            </div>
-
-            <div class="form-card">
-                <form id="form-trade" class="form-row" onsubmit="salvarOperacao(event)">
-                    <div class="input-group">
-                        <label>Data</label>
-                        <input type="date" id="input-data" required>
-                    </div>
-                    <div class="input-group">
-                        <label>Moeda (ex: BTCUSDT)</label>
-                        <input type="text" id="input-moeda" style="text-transform: uppercase;" required autocomplete="off">
-                    </div>
-                    <div class="input-group">
-                        <label>Ação</label>
-                        <select id="input-acao" required>
-                            <option value="COMPRA">COMPRA (Long)</option>
-                            <option value="VENDA">VENDA (Short)</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label>Valor da Margem ($)</label>
-                        <input type="number" id="input-valor" step="0.01" min="1" required placeholder="Ex: 50.00">
-                    </div>
-                    <div class="input-group">
-                        <label>Resultado PnL (%)</label>
-                        <input type="number" id="input-ganho" step="0.01" required placeholder="Ex: 100 ou -50">
-                    </div>
-                    <button type="submit" class="btn-add" id="btn-submit">Adicionar</button>
-                </form>
-            </div>
-
-            <div class="table-container">
-                <table id="tabela-operacoes">
-                    <thead>
-                        <tr>
-                            <th>Data</th>
-                            <th>Moeda</th>
-                            <th>Ação</th>
-                            <th>Valor ($)</th>
-                            <th>PnL (%)</th>
-                            <th>Resultado Líquido</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
             </div>
         </div>
-
     </div>
 
     <script>
-        Chart.defaults.color = '#94a3b8';
-        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = '#94a3b8'; Chart.defaults.font.family = "'Inter', sans-serif";
 
         const supabaseUrl = 'https://wadoafetalzmdeaaxawa.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndhZG9hZmV0YWx6bWRlYWF4YXdhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMjAwMjUsImV4cCI6MjA5MjY5NjAyNX0.PyOvKZg6YQwRdfslpKsckQjQVt3cFOt2co2n2FJnvNs';
         const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        let operacoes = [];
-        let chartPnL = null;
-        let chartAction = null;
-        let editandoId = null;
+        let operacoes = []; let chartPnL = null; let chartAction = null; let editandoId = null;
+        let cotacaoDolar = 5.0; let exibirEmReal = false; let usuarioAtual = null;
 
-        // VARIÁVEIS PARA A COTAÇÃO
-        let cotacaoDolar = 5.0; // Fallback caso a API falhe
-        let exibirEmReal = false;
-
+        // INICIALIZAÇÃO E ESCUTA DE SESSÃO
         window.onload = async () => {
             const hoje = new Date();
             const mesFormatado = hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0');
             document.getElementById('filtro-mes').value = mesFormatado;
-            
             document.getElementById('input-data').valueAsDate = hoje;
-            
-            // Busca a cotação do dia na API
             await buscarCotacaoDolar();
-            await buscarDadosDaNuvem();
+
+            // Verifica se já está logado
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            tratarSessao(session);
+
+            // Escuta mudanças (login, logout)
+            supabaseClient.auth.onAuthStateChange((_event, session) => {
+                tratarSessao(session);
+            });
         };
 
-        // FUNÇÃO QUE CONSOME A API DE COTAÇÃO
-        async function buscarCotacaoDolar() {
-            try {
-                const response = await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL');
-                const data = await response.json();
-                cotacaoDolar = parseFloat(data.USDBRL.bid);
-            } catch (error) {
-                console.error("Erro ao buscar cotação da AwesomeAPI:", error);
+        function tratarSessao(session) {
+            if (session) {
+                usuarioAtual = session.user;
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('app-screen').style.display = 'flex';
+                buscarDadosDaNuvem(); // Carrega os dados DO USUÁRIO LOGADO
+            } else {
+                usuarioAtual = null;
+                document.getElementById('auth-screen').style.display = 'flex';
+                document.getElementById('app-screen').style.display = 'none';
             }
         }
 
-        // FUNÇÃO QUE ALTERNA ENTRE DÓLAR E REAL
+        // FUNÇÕES DE AUTENTICAÇÃO
+        async function criarConta() {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-senha').value;
+            if(!email || !password) return showToast("Preencha email e senha", "error");
+
+            const { data, error } = await supabaseClient.auth.signUp({ email, password });
+            if (error) showToast(error.message, "error");
+            else showToast("Conta criada! Pode fazer login.", "success");
+        }
+
+        async function fazerLogin() {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-senha').value;
+            if(!email || !password) return showToast("Preencha email e senha", "error");
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) showToast("Login ou senha inválidos", "error");
+        }
+
+        async function fazerLogout() {
+            await supabaseClient.auth.signOut();
+            operacoes = []; // Limpa da memória ao sair
+            document.getElementById('auth-email').value = '';
+            document.getElementById('auth-senha').value = '';
+        }
+
+        // RESTANTE DO SISTEMA DE NEGÓCIO
+        async function buscarCotacaoDolar() {
+            try {
+                const res = await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL');
+                const data = await res.json();
+                cotacaoDolar = parseFloat(data.USDBRL.bid);
+            } catch (e) {}
+        }
+
         function toggleMoeda() {
             exibirEmReal = !exibirEmReal;
             document.getElementById('btn-moeda').innerText = exibirEmReal ? "USD 🇺🇸" : "BRL 🇧🇷";
-            atualizarDashboard(); // Refaz os cálculos da tela
+            atualizarDashboard();
         }
 
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            const icon = type === 'success' ? '✅' : '❌';
-            toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+            const toast = document.createElement('div'); toast.className = `toast ${type}`;
+            toast.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span> <span>${message}</span>`;
             container.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
         function switchTab(tabId) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById('view-' + tabId).classList.add('active');
-            
-            const botaoClicado = document.querySelector(`button[onclick="switchTab('${tabId}')"]`);
-            if(botaoClicado) botaoClicado.classList.add('active');
-
+            const btn = document.querySelector(`button[onclick="switchTab('${tabId}')"]`);
+            if(btn) btn.classList.add('active');
             if(tabId === 'dashboard') atualizarDashboard();
         }
 
         async function buscarDadosDaNuvem() {
+            // O RLS agora vai garantir que o Supabase só devolva os dados do user_id autenticado
             const { data, error } = await supabaseClient.from('operacoes').select('*');
-            if (error) {
-                showToast("Erro ao conectar com servidor.", "error");
-                return;
-            }
+            if (error) return showToast("Erro ao buscar dados.", "error");
             operacoes = data || [];
             atualizarTudo();
         }
 
         async function salvarOperacao(e) {
             e.preventDefault();
-            
-            const btn = document.getElementById('btn-submit');
-            const textoOriginal = btn.innerText;
-            btn.innerText = "Processando...";
-            btn.disabled = true;
+            const btn = document.getElementById('btn-submit'); const txt = btn.innerText;
+            btn.innerText = "Processando..."; btn.disabled = true;
 
             const opDados = {
                 data: document.getElementById('input-data').value,
                 moeda: document.getElementById('input-moeda').value.toUpperCase(),
                 acao: document.getElementById('input-acao').value,
                 valor: parseFloat(document.getElementById('input-valor').value),
-                ganho: parseFloat(document.getElementById('input-ganho').value)
+                ganho: parseFloat(document.getElementById('input-ganho').value),
+                // O banco insere o user_id automaticamente pelo default auth.uid() que configuramos!
             };
 
             let error;
@@ -373,232 +346,113 @@
                 error = res.error;
             }
 
-            if (error) {
-                showToast("Erro ao salvar operação.", "error");
-            } else {
-                showToast(editandoId ? "Operação atualizada!" : "Operação registrada!");
-                cancelarEdicao();
-                await buscarDadosDaNuvem(); 
+            if (error) showToast("Erro ao salvar operação.", "error");
+            else {
+                showToast(editandoId ? "Atualizada!" : "Registrada!");
+                cancelarEdicao(); await buscarDadosDaNuvem(); 
             }
-
-            btn.innerText = textoOriginal;
-            btn.disabled = false;
+            btn.innerText = txt; btn.disabled = false;
         }
 
         async function removerOperacao(id) {
-            if(!confirm("Excluir este registro permanentemente?")) return;
+            if(!confirm("Excluir registro?")) return;
             const { error } = await supabaseClient.from('operacoes').delete().eq('id', id);
-            
-            if (error) {
-                showToast("Erro ao excluir.", "error");
-            } else {
-                showToast("Registro excluído.", "success");
-                if(editandoId === id) cancelarEdicao();
-                await buscarDadosDaNuvem(); 
-            }
+            if (error) showToast("Erro ao excluir.", "error");
+            else { showToast("Excluído.", "success"); if(editandoId===id) cancelarEdicao(); await buscarDadosDaNuvem(); }
         }
 
         function editarOperacao(id) {
-            const op = operacoes.find(o => o.id === id);
-            if(!op) return;
-
-            document.getElementById('input-data').value = op.data;
-            document.getElementById('input-moeda').value = op.moeda;
-            document.getElementById('input-acao').value = op.acao;
-            document.getElementById('input-valor').value = op.valor;
+            const op = operacoes.find(o => o.id === id); if(!op) return;
+            document.getElementById('input-data').value = op.data; document.getElementById('input-moeda').value = op.moeda;
+            document.getElementById('input-acao').value = op.acao; document.getElementById('input-valor').value = op.valor;
             document.getElementById('input-ganho').value = op.ganho;
-            
-            editandoId = id;
-            document.getElementById('btn-submit').innerText = "Atualizar Operação";
+            editandoId = id; document.getElementById('btn-submit').innerText = "Atualizar";
             document.getElementById('btn-submit').style.backgroundColor = "#f59e0b";
-            
-            switchTab('registros');
-            window.scrollTo(0,0);
+            switchTab('registros'); window.scrollTo(0,0);
         }
 
         function cancelarEdicao() {
-            document.getElementById('form-trade').reset();
-            document.getElementById('input-data').valueAsDate = new Date();
-            editandoId = null;
-            document.getElementById('btn-submit').innerText = "Adicionar";
+            document.getElementById('form-trade').reset(); document.getElementById('input-data').valueAsDate = new Date();
+            editandoId = null; document.getElementById('btn-submit').innerText = "Adicionar";
             document.getElementById('btn-submit').style.backgroundColor = "var(--primary)";
         }
 
-        function calcularResultado(valor, ganhoPerc) { return valor * (ganhoPerc / 100); }
-        function formatarDataBR(dataString) {
-            if (!dataString) return '';
-            const p = dataString.split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : dataString;
-        }
-        function formatMoney(value) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value); }
+        function calcularResultado(v, g) { return v * (g / 100); }
+        function formatarDataBR(d) { if (!d) return ''; const p = d.split('-'); return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : d; }
+        function formatMoney(v) { return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(v); }
 
-        function atualizarTudo() {
-            renderizarTabela();
-            atualizarDashboard();
-        }
+        function atualizarTudo() { renderizarTabela(); atualizarDashboard(); }
 
         function renderizarTabela() {
-            const tbody = document.querySelector('#tabela-operacoes tbody');
-            tbody.innerHTML = '';
+            const tbody = document.querySelector('#tabela-operacoes tbody'); tbody.innerHTML = '';
             const opsOrdenadas = [...operacoes].sort((a, b) => new Date(b.data) - new Date(a.data));
-
             opsOrdenadas.forEach(op => {
-                const resultado = calcularResultado(op.valor, op.ganho);
-                const classeAcao = op.acao === 'COMPRA' ? 'compra' : 'venda';
-                const corGanho = op.ganho >= 0 ? 'ganho' : 'perda';
-                const iconeSeta = op.ganho >= 0 ? '📈' : '📉';
-                const corResultado = resultado >= 0 ? 'text-success' : 'text-danger';
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${formatarDataBR(op.data)}</td>
-                    <td style="font-weight: 600; letter-spacing: 1px;">${op.moeda}</td>
-                    <td><span class="badge ${classeAcao}">${op.acao}</span></td>
-                    <td>${formatMoney(op.valor)}</td>
-                    <td class="badge ${corGanho}">${iconeSeta} ${op.ganho > 0 ? '+' : ''}${op.ganho}%</td>
-                    <td class="${corResultado}" style="font-weight: 700;">${op.ganho > 0 ? '+' : ''}${formatMoney(resultado)}</td>
-                    <td>
-                        <div class="action-btns">
-                            <button class="icon-btn btn-edit" onclick="editarOperacao(${op.id})" title="Editar">✏️</button>
-                            <button class="icon-btn btn-del" onclick="removerOperacao(${op.id})" title="Excluir">🗑️</button>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(tr);
+                const res = calcularResultado(op.valor, op.ganho); const cAcao = op.acao === 'COMPRA' ? 'compra' : 'venda';
+                const cGanho = op.ganho >= 0 ? 'ganho' : 'perda'; const iSeta = op.ganho >= 0 ? '📈' : '📉';
+                const cRes = res >= 0 ? 'text-success' : 'text-danger';
+                tbody.innerHTML += `<tr>
+                    <td>${formatarDataBR(op.data)}</td><td style="font-weight: 600;">${op.moeda}</td>
+                    <td><span class="badge ${cAcao}">${op.acao}</span></td><td>${formatMoney(op.valor)}</td>
+                    <td class="badge ${cGanho}">${iSeta} ${op.ganho > 0 ? '+' : ''}${op.ganho}%</td>
+                    <td class="${cRes}" style="font-weight: 700;">${op.ganho > 0 ? '+' : ''}${formatMoney(res)}</td>
+                    <td><div class="action-btns"><button class="icon-btn btn-edit" onclick="editarOperacao(${op.id})">✏️</button><button class="icon-btn btn-del" onclick="removerOperacao(${op.id})">🗑️</button></div></td>
+                </tr>`;
             });
         }
 
         function atualizarDashboard() {
-            const mesSelecionado = document.getElementById('filtro-mes').value;
-            let opsFiltradas = operacoes;
+            const mes = document.getElementById('filtro-mes').value;
+            let ops = mes ? operacoes.filter(op => op.data.startsWith(mes)) : operacoes;
+            const elRes = document.getElementById('kpi-resultado'); const elResSub = document.getElementById('kpi-resultado-sub');
 
-            if (mesSelecionado) {
-                opsFiltradas = operacoes.filter(op => op.data.startsWith(mesSelecionado));
-            }
-
-            const elResultado = document.getElementById('kpi-resultado');
-            const elResultadoSub = document.getElementById('kpi-resultado-sub');
-
-            if (opsFiltradas.length === 0) {
-                elResultado.innerText = exibirEmReal ? "R$ 0,00" : "$ 0.00";
-                elResultadoSub.innerText = "0 operações no período";
-                document.getElementById('kpi-winrate').innerText = "0%";
-                document.getElementById('kpi-winrate-sub').innerText = "0 operações no período";
-                document.getElementById('kpi-volume').innerText = "$ 0.00";
-                document.getElementById('kpi-melhor-moeda').innerText = "---";
+            if (ops.length === 0) {
+                elRes.innerText = exibirEmReal ? "R$ 0,00" : "$ 0.00"; elResSub.innerText = "0 operações";
+                document.getElementById('kpi-winrate').innerText = "0%"; document.getElementById('kpi-winrate-sub').innerText = "0 ops";
+                document.getElementById('kpi-volume').innerText = "$ 0.00"; document.getElementById('kpi-melhor-moeda').innerText = "---";
                 document.getElementById('kpi-melhor-moeda').className = "kpi-value";
-                if(chartPnL) chartPnL.destroy();
-                if(chartAction) chartAction.destroy();
-                return;
+                if(chartPnL) chartPnL.destroy(); if(chartAction) chartAction.destroy(); return;
             }
 
-            let resultadoLiquido = 0, totalVolume = 0, acertos = 0;
-            const moedasPnL = {}; const pnlNoTempo = {};
-            let compras = 0, vendas = 0;
-
-            opsFiltradas.forEach(op => {
-                const res = calcularResultado(op.valor, op.ganho);
-                resultadoLiquido += res;
-                totalVolume += op.valor;
-                if (res > 0) acertos++;
-                if(op.acao === 'COMPRA') compras++; else vendas++;
-
-                moedasPnL[op.moeda] = (moedasPnL[op.moeda] || 0) + res;
-                pnlNoTempo[op.data] = (pnlNoTempo[op.data] || 0) + res;
+            let resLiq = 0, vol = 0, acertos = 0; const moedas = {}; const pnlDia = {}; let c = 0, v = 0;
+            ops.forEach(op => {
+                const r = calcularResultado(op.valor, op.ganho); resLiq += r; vol += op.valor;
+                if (r > 0) acertos++; if(op.acao === 'COMPRA') c++; else v++;
+                moedas[op.moeda] = (moedas[op.moeda] || 0) + r; pnlDia[op.data] = (pnlDia[op.data] || 0) + r;
             });
 
-            // LÓGICA DE EXIBIÇÃO DÓLAR / REAL
             if (exibirEmReal) {
-                const valorEmReal = resultadoLiquido * cotacaoDolar;
-                elResultado.innerText = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorEmReal);
-                elResultadoSub.innerText = `Cotação de hoje: R$ ${cotacaoDolar.toFixed(2).replace('.', ',')}`;
-            } else {
-                elResultado.innerText = formatMoney(resultadoLiquido);
-                elResultadoSub.innerText = "Lucro/Prejuízo no período";
-            }
+                elRes.innerText = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(resLiq * cotacaoDolar);
+                elResSub.innerText = `Cotação de hoje: R$ ${cotacaoDolar.toFixed(2).replace('.', ',')}`;
+            } else { elRes.innerText = formatMoney(resLiq); elResSub.innerText = "Lucro/Prejuízo no período"; }
             
-            const winRate = ((acertos / opsFiltradas.length) * 100).toFixed(1);
-            document.getElementById('kpi-winrate').innerText = `${winRate}%`;
-            document.getElementById('kpi-winrate-sub').innerText = `${acertos} wins de ${opsFiltradas.length} ops`;
-            document.getElementById('kpi-volume').innerText = formatMoney(totalVolume);
+            document.getElementById('kpi-winrate').innerText = `${((acertos / ops.length) * 100).toFixed(1)}%`;
+            document.getElementById('kpi-winrate-sub').innerText = `${acertos} wins de ${ops.length} ops`;
+            document.getElementById('kpi-volume').innerText = formatMoney(vol);
 
-            let melhorMoeda = '---'; let maiorPnL = -Infinity;
-            for (const [moeda, pnl] of Object.entries(moedasPnL)) {
-                if (pnl > maiorPnL) { maiorPnL = pnl; melhorMoeda = moeda; }
-            }
-            
-            const elMelhorMoeda = document.getElementById('kpi-melhor-moeda');
-            elMelhorMoeda.innerText = melhorMoeda;
-            elMelhorMoeda.className = "kpi-value " + (maiorPnL >= 0 ? "text-success" : "text-danger");
-            document.getElementById('kpi-melhor-moeda-sub').innerText = `PnL: ${formatMoney(maiorPnL)}`;
+            let mel = '---'; let mPnl = -Infinity; for (const [m, p] of Object.entries(moedas)) { if (p > mPnl) { mPnl = p; mel = m; } }
+            const elMel = document.getElementById('kpi-melhor-moeda'); elMel.innerText = mel;
+            elMel.className = "kpi-value " + (mPnl >= 0 ? "text-success" : "text-danger");
+            document.getElementById('kpi-melhor-moeda-sub').innerText = `PnL: ${formatMoney(mPnl)}`;
 
-            renderizarGraficos(pnlNoTempo, compras, vendas);
+            renderGraficos(pnlDia, c, v);
         }
 
-        function renderizarGraficos(dadosTempo, compras, vendas) {
-            const datasOrdenadas = Object.keys(dadosTempo).sort();
-            let pnlAcumulado = 0;
-            const valoresAcumulados = datasOrdenadas.map(data => {
-                pnlAcumulado += dadosTempo[data];
-                return pnlAcumulado;
-            });
-            const labelsFormatadas = datasOrdenadas.map(d => formatarDataBR(d));
+        function renderGraficos(dados, c, v) {
+            const dOrd = Object.keys(dados).sort(); let ac = 0;
+            const vals = dOrd.map(d => { ac += dados[d]; return ac; });
+            const labs = dOrd.map(formatarDataBR);
 
-            const ctxPnL = document.getElementById('pnlChart').getContext('2d');
-            if(chartPnL) chartPnL.destroy();
-            
-            let gradient = ctxPnL.createLinearGradient(0, 0, 0, 300);
-            gradient.addColorStop(0, 'rgba(99, 102, 241, 0.4)');
-            gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
-            
-            chartPnL = new Chart(ctxPnL, {
-                type: 'line',
-                data: {
-                    labels: labelsFormatadas,
-                    datasets: [{
-                        label: 'PnL Acumulado ($)',
-                        data: valoresAcumulados,
-                        borderColor: '#6366f1',
-                        backgroundColor: gradient,
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#6366f1',
-                        pointBorderColor: '#1e293b',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { grid: { display: false, drawBorder: false } },
-                        y: { grid: { color: '#334155', borderDash: [5, 5] } }
-                    }
-                }
+            const cPnl = document.getElementById('pnlChart').getContext('2d'); if(chartPnL) chartPnL.destroy();
+            let grad = cPnl.createLinearGradient(0, 0, 0, 300); grad.addColorStop(0, 'rgba(99, 102, 241, 0.4)'); grad.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+            chartPnL = new Chart(cPnl, {
+                type: 'line', data: { labels: labs, datasets: [{ data: vals, borderColor: '#6366f1', backgroundColor: grad, borderWidth: 3, fill: true, tension: 0.4 }] },
+                options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { color: '#334155' } } } }
             });
 
-            const ctxAction = document.getElementById('actionChart').getContext('2d');
-            if(chartAction) chartAction.destroy();
-            chartAction = new Chart(ctxAction, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Compras (Long)', 'Vendas (Short)'],
-                    datasets: [{
-                        data: [compras, vendas],
-                        backgroundColor: ['#10b981', '#f43f5e'],
-                        borderColor: '#1e293b',
-                        borderWidth: 4
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    cutout: '75%',
-                    plugins: {
-                        legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true } }
-                    }
-                }
+            const cAct = document.getElementById('actionChart').getContext('2d'); if(chartAction) chartAction.destroy();
+            chartAction = new Chart(cAct, {
+                type: 'doughnut', data: { labels: ['Compras', 'Vendas'], datasets: [{ data: [c, v], backgroundColor: ['#10b981', '#f43f5e'], borderColor: '#1e293b', borderWidth: 4 }] },
+                options: { responsive: true, cutout: '75%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true } } } }
             });
         }
     </script>
