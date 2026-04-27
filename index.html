@@ -187,7 +187,7 @@
                         <span class="kpi-subtitle">Soma de margens</span>
                     </div>
                     <div class="kpi-card">
-                        <span class="kpi-title">Melhor Ativo</span>
+                        <span class="kpi-title" id="title-melhor-moeda">Melhor Ativo</span>
                         <h3 class="kpi-value" id="kpi-melhor-moeda">---</h3>
                         <span class="kpi-subtitle" id="kpi-melhor-moeda-sub">Análise do período</span>
                     </div>
@@ -459,10 +459,16 @@
 
             if (ops.length === 0) {
                 elRes.innerText = exibirEmReal ? "R$ 0,00" : "$ 0.00"; elResSub.innerText = "0 operações";
-                elRes.className = "kpi-value"; // Reset color
+                elRes.className = "kpi-value"; 
                 document.getElementById('kpi-winrate').innerText = "0%"; document.getElementById('kpi-winrate-sub').innerText = "0 ops";
-                document.getElementById('kpi-volume').innerText = "$ 0.00"; document.getElementById('kpi-melhor-moeda').innerText = "---";
+                document.getElementById('kpi-volume').innerText = "$ 0.00"; 
+                
+                // RESET DA MOEDA QUANDO VAZIO
+                document.getElementById('title-melhor-moeda').innerText = "Melhor Ativo";
+                document.getElementById('kpi-melhor-moeda').innerText = "---";
                 document.getElementById('kpi-melhor-moeda').className = "kpi-value";
+                document.getElementById('kpi-melhor-moeda-sub').innerText = "Análise do período";
+                
                 document.getElementById('kpi-streak-win').innerText = "0"; document.getElementById('kpi-streak-loss').innerText = "0";
                 if(chartPnL) chartPnL.destroy(); if(chartAction) chartAction.destroy(); return;
             }
@@ -491,7 +497,6 @@
                 moedas[op.moeda] = (moedas[op.moeda] || 0) + r; pnlDia[op.data] = (pnlDia[op.data] || 0) + r;
             });
 
-            // LÓGICA DE EXIBIÇÃO DÓLAR / REAL E CORES DO RESULTADO LÍQUIDO
             if (exibirEmReal) {
                 elRes.innerText = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(resLiq * cotacaoDolar);
                 elResSub.innerText = `Cotação de hoje: R$ ${cotacaoDolar.toFixed(2).replace('.', ',')}`;
@@ -500,7 +505,6 @@
                 elResSub.innerText = "Lucro/Prejuízo no período"; 
             }
 
-            // APLICAÇÃO DA COR VERDE OU VERMELHA
             if (resLiq > 0) {
                 elRes.className = "kpi-value text-success";
             } else if (resLiq < 0) {
@@ -515,10 +519,25 @@
             document.getElementById('kpi-streak-win').innerText = maxWinStreak;
             document.getElementById('kpi-streak-loss').innerText = maxLossStreak;
 
+            // LÓGICA DO MELHOR / PIOR ATIVO ATUALIZADA
             let mel = '---'; let mPnl = -Infinity; for (const [m, p] of Object.entries(moedas)) { if (p > mPnl) { mPnl = p; mel = m; } }
-            const elMel = document.getElementById('kpi-melhor-moeda'); elMel.innerText = mel;
-            elMel.className = "kpi-value " + (mPnl >= 0 ? "text-success" : "text-danger");
-            document.getElementById('kpi-melhor-moeda-sub').innerText = `PnL: ${formatMoney(mPnl)}`;
+            
+            const elMel = document.getElementById('kpi-melhor-moeda'); 
+            const titleMel = document.getElementById('title-melhor-moeda');
+            elMel.innerText = mel;
+            
+            if (mPnl > 0) {
+                elMel.className = "kpi-value text-success";
+                titleMel.innerText = "Melhor Ativo";
+            } else if (mPnl < 0 && mPnl !== -Infinity) {
+                elMel.className = "kpi-value text-danger";
+                titleMel.innerText = "Pior Ativo";
+            } else {
+                elMel.className = "kpi-value";
+                titleMel.innerText = "Melhor Ativo";
+            }
+
+            document.getElementById('kpi-melhor-moeda-sub').innerText = mPnl === -Infinity ? "Análise do período" : `PnL: ${formatMoney(mPnl)}`;
 
             renderGraficos(pnlDia, c, v);
         }
