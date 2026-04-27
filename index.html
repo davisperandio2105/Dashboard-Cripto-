@@ -213,6 +213,19 @@
                         <canvas id="actionChart" height="200"></canvas>
                     </div>
                 </div>
+
+                <div id="dashboard-table-section" style="margin-top: 30px; display: none;">
+                    <div class="section-header" style="margin-bottom: 15px;">
+                        <div><h3 style="margin: 0; font-size: 1.2rem; color: var(--text-main);">Operações do Período</h3></div>
+                    </div>
+                    <div class="table-container">
+                        <table id="tabela-dashboard">
+                            <thead><tr><th>Data</th><th>Moeda</th><th>Ação</th><th>Margem ($)</th><th>PnL (%)</th><th>Resultado</th><th>Ações</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
 
             <div id="view-registros" class="view-section">
@@ -439,6 +452,44 @@
             });
         }
 
+        // FUNÇÃO QUE RENDERIZA A NOVA TABELA DO DASHBOARD
+        function renderizarTabelaDashboard(opsFiltradas) {
+            const container = document.getElementById('dashboard-table-section');
+            const tbody = document.querySelector('#tabela-dashboard tbody');
+            tbody.innerHTML = '';
+
+            if(opsFiltradas.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+            // Organiza da mais nova para a mais velha (descrescente)
+            const opsOrdenadas = [...opsFiltradas].sort((a, b) => new Date(b.data) - new Date(a.data));
+
+            opsOrdenadas.forEach(op => {
+                const res = calcularResultado(op.valor, op.ganho);
+                const cAcao = op.acao === 'COMPRA' ? 'compra' : 'venda';
+                const cGanho = op.ganho >= 0 ? 'ganho' : 'perda';
+                const iSeta = op.ganho >= 0 ? '📈' : '📉';
+                const cRes = res >= 0 ? 'text-success' : 'text-danger';
+
+                // Aplica a lógica da moeda (Dólar ou Real)
+                let valorExibicao = formatMoney(res);
+                if (exibirEmReal) {
+                    valorExibicao = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(res * cotacaoDolar);
+                }
+
+                tbody.innerHTML += `<tr>
+                    <td>${formatarDataBR(op.data)}</td><td style="font-weight: 600;">${op.moeda}</td>
+                    <td><span class="badge ${cAcao}">${op.acao}</span></td><td>${formatMoney(op.valor)}</td>
+                    <td class="badge ${cGanho}">${iSeta} ${op.ganho > 0 ? '+' : ''}${op.ganho}%</td>
+                    <td class="${cRes}" style="font-weight: 700;">${op.ganho > 0 ? '+' : ''}${valorExibicao}</td>
+                    <td><div class="action-btns"><button class="icon-btn btn-edit" onclick="editarOperacao(${op.id})">✏️</button><button class="icon-btn btn-del" onclick="removerOperacao(${op.id})">🗑️</button></div></td>
+                </tr>`;
+            });
+        }
+
         function atualizarDashboard() {
             const mes = document.getElementById('filtro-mes').value;
             const dia = document.getElementById('filtro-dia').value;
@@ -471,6 +522,8 @@
                 document.getElementById('kpi-melhor-moeda-sub').innerText = "Análise do período";
                 
                 document.getElementById('kpi-streak-win').innerText = "0"; document.getElementById('kpi-streak-loss').innerText = "0";
+                
+                renderizarTabelaDashboard([]); // Esconde a tabela do dashboard
                 if(chartPnL) chartPnL.destroy(); if(chartAction) chartAction.destroy(); return;
             }
 
@@ -520,7 +573,6 @@
             document.getElementById('kpi-streak-win').innerText = maxWinStreak;
             document.getElementById('kpi-streak-loss').innerText = maxLossStreak;
 
-            // LÓGICA DO MELHOR E PIOR ATIVO CORRIGIDA
             let maxPnl = -Infinity; let melhorMoeda = '---';
             let minPnl = Infinity; let piorMoeda = '---';
             
@@ -547,6 +599,7 @@
             }
 
             renderGraficos(pnlDia, c, v);
+            renderizarTabelaDashboard(ops); // Exibe a tabela do dashboard com os dados filtrados
         }
 
         function renderGraficos(dados, c, v) {
