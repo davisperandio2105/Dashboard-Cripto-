@@ -216,7 +216,7 @@
             </div>
 
             <div id="view-registros" class="view-section">
-                <div class="section-header"><div><h2>Registros de Operação</h2><p>Gerencie seu diário</p></div></div>
+                <div class="section-header"><div><h2>Registros de Operação</h2><p>Gerencie o seu diário</p></div></div>
                 <div class="form-card">
                     <form id="form-trade" class="form-row" onsubmit="salvarOperacao(event)">
                         <div class="input-group"><label>Data</label><input type="date" id="input-data" required></div>
@@ -394,7 +394,7 @@
         }
 
         async function removerOperacao(id) {
-            if(!confirm("Excluir registro?")) return;
+            if(!confirm("Excluir registo?")) return;
             const { error } = await supabaseClient.from('operacoes').delete().eq('id', id);
             if (error) showToast("Erro ao excluir.", "error");
             else { showToast("Excluído.", "success"); if(editandoId===id) cancelarEdicao(); await buscarDadosDaNuvem(); }
@@ -456,6 +456,8 @@
 
             const elRes = document.getElementById('kpi-resultado'); 
             const elResSub = document.getElementById('kpi-resultado-sub');
+            const titleMel = document.getElementById('title-melhor-moeda');
+            const elMel = document.getElementById('kpi-melhor-moeda');
 
             if (ops.length === 0) {
                 elRes.innerText = exibirEmReal ? "R$ 0,00" : "$ 0.00"; elResSub.innerText = "0 operações";
@@ -463,10 +465,9 @@
                 document.getElementById('kpi-winrate').innerText = "0%"; document.getElementById('kpi-winrate-sub').innerText = "0 ops";
                 document.getElementById('kpi-volume').innerText = "$ 0.00"; 
                 
-                // RESET DA MOEDA QUANDO VAZIO
-                document.getElementById('title-melhor-moeda').innerText = "Melhor Ativo";
-                document.getElementById('kpi-melhor-moeda').innerText = "---";
-                document.getElementById('kpi-melhor-moeda').className = "kpi-value";
+                titleMel.innerText = "Melhor Ativo";
+                elMel.innerText = "---";
+                elMel.className = "kpi-value";
                 document.getElementById('kpi-melhor-moeda-sub').innerText = "Análise do período";
                 
                 document.getElementById('kpi-streak-win').innerText = "0"; document.getElementById('kpi-streak-loss').innerText = "0";
@@ -519,25 +520,31 @@
             document.getElementById('kpi-streak-win').innerText = maxWinStreak;
             document.getElementById('kpi-streak-loss').innerText = maxLossStreak;
 
-            // LÓGICA DO MELHOR / PIOR ATIVO ATUALIZADA
-            let mel = '---'; let mPnl = -Infinity; for (const [m, p] of Object.entries(moedas)) { if (p > mPnl) { mPnl = p; mel = m; } }
+            // LÓGICA DO MELHOR E PIOR ATIVO CORRIGIDA
+            let maxPnl = -Infinity; let melhorMoeda = '---';
+            let minPnl = Infinity; let piorMoeda = '---';
             
-            const elMel = document.getElementById('kpi-melhor-moeda'); 
-            const titleMel = document.getElementById('title-melhor-moeda');
-            elMel.innerText = mel;
+            for (const [m, p] of Object.entries(moedas)) { 
+                if (p > maxPnl) { maxPnl = p; melhorMoeda = m; }
+                if (p < minPnl) { minPnl = p; piorMoeda = m; }
+            }
             
-            if (mPnl > 0) {
+            if (maxPnl > 0) {
+                elMel.innerText = melhorMoeda;
                 elMel.className = "kpi-value text-success";
                 titleMel.innerText = "Melhor Ativo";
-            } else if (mPnl < 0 && mPnl !== -Infinity) {
+                document.getElementById('kpi-melhor-moeda-sub').innerText = `PnL: ${formatMoney(maxPnl)}`;
+            } else if (maxPnl <= 0 && maxPnl !== -Infinity) {
+                elMel.innerText = piorMoeda;
                 elMel.className = "kpi-value text-danger";
                 titleMel.innerText = "Pior Ativo";
+                document.getElementById('kpi-melhor-moeda-sub').innerText = `PnL: ${formatMoney(minPnl)}`;
             } else {
+                elMel.innerText = "---";
                 elMel.className = "kpi-value";
                 titleMel.innerText = "Melhor Ativo";
+                document.getElementById('kpi-melhor-moeda-sub').innerText = "Análise do período";
             }
-
-            document.getElementById('kpi-melhor-moeda-sub').innerText = mPnl === -Infinity ? "Análise do período" : `PnL: ${formatMoney(mPnl)}`;
 
             renderGraficos(pnlDia, c, v);
         }
