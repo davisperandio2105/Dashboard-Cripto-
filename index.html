@@ -706,12 +706,15 @@
             try {
                 const symbols = moedas.map(m => toSymbol(m));
                 const param = encodeURIComponent(JSON.stringify(symbols));
-                const res = await fetch(`https://api.binance.com/api/v3/exchangeInfo?symbols=${param}`);
-                if (!res.ok) return new Set();
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 6000);
+                const res = await fetch(`https://api.binance.com/api/v3/exchangeInfo?symbols=${param}`, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (!res.ok) return null;
                 const data = await res.json();
                 return new Set((data.symbols || []).filter(s => s.status === 'TRADING').map(s => s.symbol));
             } catch (e) {
-                return new Set();
+                return null;
             }
         }
 
@@ -733,9 +736,19 @@
 
             if (moedasUnicas.length === 0) return;
 
-            simbolosValidos = await validarSimbolosBinance(moedasUnicas);
-            simbolosInvalidos = new Set(moedasUnicas.filter(m => !simbolosValidos.has(toSymbol(m))));
+            const resultado = await validarSimbolosBinance(moedasUnicas);
 
+            if (resultado === null) {
+                if (tentativa < 3) { setTimeout(() => iniciarCotacoesAoVivo(tentativa + 1), 1800); return; }
+                document.querySelectorAll('.live-price, .watch-price').forEach(el => {
+                    el.innerText = 'bloqueado — desative bloqueador de anúncios';
+                    el.classList.add('text-danger');
+                });
+                return;
+            }
+
+            simbolosValidos = resultado;
+            simbolosInvalidos = new Set(moedasUnicas.filter(m => !simbolosValidos.has(toSymbol(m))));
             atualizarBadgesIndisponiveis();
 
             if (simbolosValidos.size === 0) return;
@@ -744,7 +757,11 @@
             wsSpot = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${streams}`);
             let conectou = false;
 
-            wsSpot.onopen = () => { conectou = true; };
+            const timeoutAbertura = setTimeout(() => {
+                if (!conectou && wsSpot) wsSpot.close();
+            }, 6000);
+
+            wsSpot.onopen = () => { conectou = true; clearTimeout(timeoutAbertura); };
 
             wsSpot.onmessage = (event) => {
                 const pacote = JSON.parse(event.data);
@@ -756,11 +773,12 @@
             };
 
             wsSpot.onclose = () => {
+                clearTimeout(timeoutAbertura);
                 if (!conectou && tentativa < 3) {
                     setTimeout(() => iniciarCotacoesAoVivo(tentativa + 1), 1500);
                 } else if (!conectou) {
                     document.querySelectorAll('.live-price, .watch-price').forEach(el => {
-                        el.innerText = 'sem conexão — tente hospedar em servidor';
+                        el.innerText = 'bloqueado — desative bloqueador de anúncios';
                         el.classList.add('text-danger');
                     });
                 }
