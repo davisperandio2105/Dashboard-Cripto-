@@ -520,6 +520,8 @@
         let precoAtualPorMoeda = {};
         let simbolosValidos = new Set();
         let simbolosInvalidos = new Set();
+        let coingeckoMapa = null;
+        let coingeckoPollTimer = null;
 
         const iconNote = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
 
@@ -550,6 +552,7 @@
                 document.getElementById('auth-screen').style.display = 'flex';
                 document.getElementById('app-screen').style.display = 'none';
                 if (wsSpot) { wsSpot.close(); wsSpot = null; }
+                if (coingeckoPollTimer) { clearInterval(coingeckoPollTimer); coingeckoPollTimer = null; }
             }
         }
 
@@ -701,18 +704,85 @@
             });
         }
 
+        async function carregarMapaCoinGecko() {
+            if (coingeckoMapa) return coingeckoMapa;
+            try {
+                const res = await fetch('https://api.coingecko.com/api/v3/coins/list');
+                if (!res.ok) return null;
+                const lista = await res.json();
+                const mapa = {};
+                lista.forEach(c => {
+                    const sym = (c.symbol || '').toUpperCase();
+                    if (sym && !mapa[sym]) mapa[sym] = c.id;
+                });
+                coingeckoMapa = mapa;
+                return mapa;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function iniciarCotacoesCoinGecko(moedasUnicas) {
+            if (coingeckoPollTimer) { clearInterval(coingeckoPollTimer); coingeckoPollTimer = null; }
+
+            const mapa = await carregarMapaCoinGecko();
+            if (!mapa) {
+                document.querySelectorAll('.live-price, .watch-price').forEach(el => {
+                    el.innerText = 'fonte de preço indisponível';
+                    el.classList.add('text-danger');
+                });
+                return;
+            }
+
+            const paresMoedaId = moedasUnicas
+                .map(m => ({ moeda: m, id: mapa[m] }))
+                .filter(p => p.id);
+
+            const semId = moedasUnicas.filter(m => !mapa[m]);
+            semId.forEach(m => {
+                document.querySelectorAll(`.live-price[data-coin="${toSymbol(m)}"]`).forEach(el => { el.innerText = 'não encontrada'; el.classList.add('text-muted'); });
+                document.querySelectorAll(`.watch-price[data-coin="${toSymbol(m)}"]`).forEach(el => { el.innerText = 'não encontrada'; el.classList.add('text-muted'); });
+            });
+
+            if (paresMoedaId.length === 0) return;
+
+            const buscarPrecos = async () => {
+                try {
+                    const ids = [...new Set(paresMoedaId.map(p => p.id))].join(',');
+                    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    paresMoedaId.forEach(p => {
+                        const preco = data[p.id] && data[p.id].usd;
+                        if (preco === undefined) return;
+                        const symbol = toSymbol(p.moeda);
+                        precoAtualPorMoeda[symbol] = preco;
+                        atualizarPrecoAoVivoUI(symbol);
+                        atualizarPrecoWatchUI(symbol);
+                    });
+                } catch (e) { /* tenta de novo no próximo ciclo */ }
+            };
+
+            await buscarPrecos();
+            coingeckoPollTimer = setInterval(buscarPrecos, 20000);
+        }
+
+        let binanceSymbolsCache = null;
+
         async function validarSimbolosBinance(moedas) {
             if (moedas.length === 0) return new Set();
             try {
-                const symbols = moedas.map(m => toSymbol(m));
-                const param = encodeURIComponent(JSON.stringify(symbols));
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 6000);
-                const res = await fetch(`https://api.binance.com/api/v3/exchangeInfo?symbols=${param}`, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                if (!res.ok) return null;
-                const data = await res.json();
-                return new Set((data.symbols || []).filter(s => s.status === 'TRADING').map(s => s.symbol));
+                if (!binanceSymbolsCache) {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 8000);
+                    const res = await fetch(`https://api.binance.com/api/v3/exchangeInfo`, { signal: controller.signal });
+                    clearTimeout(timeoutId);
+                    if (!res.ok) return null;
+                    const data = await res.json();
+                    binanceSymbolsCache = new Set((data.symbols || []).filter(s => s.status === 'TRADING').map(s => s.symbol));
+                }
+                const desejados = new Set(moedas.map(m => toSymbol(m)));
+                return new Set([...binanceSymbolsCache].filter(s => desejados.has(s)));
             } catch (e) {
                 return null;
             }
@@ -721,6 +791,7 @@
         async function iniciarCotacoesAoVivo(tentativa) {
             tentativa = tentativa || 0;
             if (wsSpot) { wsSpot.close(); wsSpot = null; }
+            if (tentativa === 0 && coingeckoPollTimer) { clearInterval(coingeckoPollTimer); coingeckoPollTimer = null; }
 
             const abertas = operacoes.filter(op => (op.status || 'fechada') === 'aberta');
             const moedasOps = abertas.map(op => op.moeda.trim().toUpperCase());
@@ -739,11 +810,8 @@
             const resultado = await validarSimbolosBinance(moedasUnicas);
 
             if (resultado === null) {
-                if (tentativa < 3) { setTimeout(() => iniciarCotacoesAoVivo(tentativa + 1), 1800); return; }
-                document.querySelectorAll('.live-price, .watch-price').forEach(el => {
-                    el.innerText = 'bloqueado — desative bloqueador de anúncios';
-                    el.classList.add('text-danger');
-                });
+                if (tentativa < 2) { setTimeout(() => iniciarCotacoesAoVivo(tentativa + 1), 1500); return; }
+                iniciarCotacoesCoinGecko(moedasUnicas);
                 return;
             }
 
@@ -774,13 +842,10 @@
 
             wsSpot.onclose = () => {
                 clearTimeout(timeoutAbertura);
-                if (!conectou && tentativa < 3) {
+                if (!conectou && tentativa < 2) {
                     setTimeout(() => iniciarCotacoesAoVivo(tentativa + 1), 1500);
                 } else if (!conectou) {
-                    document.querySelectorAll('.live-price, .watch-price').forEach(el => {
-                        el.innerText = 'bloqueado — desative bloqueador de anúncios';
-                        el.classList.add('text-danger');
-                    });
+                    iniciarCotacoesCoinGecko(moedasUnicas);
                 }
             };
         }
