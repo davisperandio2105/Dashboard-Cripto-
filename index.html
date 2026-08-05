@@ -735,10 +735,10 @@
             }
 
             const paresMoedaId = moedasUnicas
-                .map(m => ({ moeda: m, id: mapa[m] }))
+                .map(m => ({ moeda: m, id: mapa[baseCoin(m)] }))
                 .filter(p => p.id);
 
-            const semId = moedasUnicas.filter(m => !mapa[m]);
+            const semId = moedasUnicas.filter(m => !mapa[baseCoin(m)]);
             semId.forEach(m => {
                 document.querySelectorAll(`.live-price[data-coin="${toSymbol(m)}"]`).forEach(el => { el.innerText = 'não encontrada'; el.classList.add('text-muted'); });
                 document.querySelectorAll(`.watch-price[data-coin="${toSymbol(m)}"]`).forEach(el => { el.innerText = 'não encontrada'; el.classList.add('text-muted'); });
@@ -1022,6 +1022,11 @@
         function toSymbol(moeda) {
             const m = (moeda || '').trim().toUpperCase();
             return m.endsWith('USDT') ? m : m + 'USDT';
+        }
+
+        function baseCoin(moeda) {
+            const m = (moeda || '').trim().toUpperCase();
+            return m.endsWith('USDT') ? m.slice(0, -4) : m;
         }
 
         function atualizarTudo() { renderizarTabela(); atualizarDashboard(); }
