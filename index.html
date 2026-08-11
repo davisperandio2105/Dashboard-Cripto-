@@ -459,6 +459,7 @@
                             </div>
                             <div class="input-group"><label>Valor ($)</label><input type="number" id="input-valor" step="0.01" min="1" required></div>
                             <div class="input-group"><label>Preço entrada</label><input type="number" id="input-preco" step="any" placeholder="0.001206"></div>
+                            <div class="input-group"><label>Alavancagem</label><input type="number" id="input-leverage" step="1" min="1" value="50"></div>
                             <div class="input-group"><label id="label-ganho">PnL (%)</label><input type="number" id="input-ganho" step="0.01" value="0"></div>
                             <div class="input-group" style="grid-column: 1 / -1;">
                                 <label>Notas (opcional)</label>
@@ -469,7 +470,7 @@
                     </div>
                     <div class="table-container hud">
                         <table id="tabela-operacoes">
-                            <thead><tr><th>Data</th><th>Moeda</th><th>Ação</th><th>Status</th><th>Preço entrada</th><th>Valor ($)</th><th>PnL (%)</th><th>Resultado</th><th>Notas</th><th>Ações</th></tr></thead>
+                            <thead><tr><th>Data</th><th>Moeda</th><th>Ação</th><th>Status</th><th>Preço entrada</th><th>Alav.</th><th>Valor ($)</th><th>PnL (%)</th><th>Resultado</th><th>Notas</th><th>Ações</th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
@@ -612,7 +613,7 @@
         async function buscarDadosDaNuvem() {
             const { data, error } = await supabaseClient.from('operacoes').select('*');
             if (error) return showToast("Erro ao buscar dados: " + error.message, "error");
-            operacoes = (data || []).map(op => ({ ...op, status: op.status || 'fechada', notas: op.notas || '', preco_entrada: op.preco_entrada ?? null }));
+            operacoes = (data || []).map(op => ({ ...op, status: op.status || 'fechada', notas: op.notas || '', preco_entrada: op.preco_entrada ?? null, alavancagem: op.alavancagem || 1 }));
             atualizarOpcoesFiltroMoeda();
             atualizarTudo();
             await buscarWatchlist();
@@ -707,14 +708,15 @@
         async function carregarMapaCoinGecko() {
             if (coingeckoMapa) return coingeckoMapa;
             try {
-                const res = await fetch('https://api.coingecko.com/api/v3/coins/list');
+                const res = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1`);
                 if (!res.ok) return null;
                 const lista = await res.json();
                 const mapa = {};
-                lista.forEach(c => {
+                (lista || []).forEach(c => {
                     const sym = (c.symbol || '').toUpperCase();
                     if (sym && !mapa[sym]) mapa[sym] = c.id;
                 });
+                if (Object.keys(mapa).length === 0) return null;
                 coingeckoMapa = mapa;
                 return mapa;
             } catch (e) {
@@ -722,15 +724,21 @@
             }
         }
 
-        async function iniciarCotacoesCoinGecko(moedasUnicas) {
+        async function iniciarCotacoesCoinGecko(moedasUnicas, tentativa) {
+            tentativa = tentativa || 0;
             if (coingeckoPollTimer) { clearInterval(coingeckoPollTimer); coingeckoPollTimer = null; }
 
             const mapa = await carregarMapaCoinGecko();
             if (!mapa) {
+                if (tentativa < 3) {
+                    setTimeout(() => iniciarCotacoesCoinGecko(moedasUnicas, tentativa + 1), 10000);
+                    return;
+                }
                 document.querySelectorAll('.live-price, .watch-price').forEach(el => {
-                    el.innerText = 'fonte de preço indisponível';
+                    el.innerText = 'limite de consultas atingido, tentando novamente...';
                     el.classList.add('text-danger');
                 });
+                setTimeout(() => iniciarCotacoesCoinGecko(moedasUnicas, 0), 30000);
                 return;
             }
 
@@ -873,10 +881,13 @@
                 let html = formatPreco(precoAtual);
 
                 if (op.preco_entrada) {
-                    let delta = ((precoAtual - op.preco_entrada) / op.preco_entrada) * 100;
-                    if (op.acao === 'VENDA') delta = -delta;
-                    const cor = delta >= 0 ? 'text-success' : 'text-danger';
-                    html += ` <span class="${cor}">(${delta >= 0 ? '+' : ''}${delta.toFixed(1)}% vs entrada)</span>`;
+                    let deltaPreco = ((precoAtual - op.preco_entrada) / op.preco_entrada) * 100;
+                    if (op.acao === 'VENDA') deltaPreco = -deltaPreco;
+                    const alav = op.alavancagem || 1;
+                    const deltaConta = deltaPreco * alav;
+                    const cor = deltaConta >= 0 ? 'text-success' : 'text-danger';
+                    const sufixoAlav = alav > 1 ? ` (${alav}x)` : '';
+                    html += ` <span class="${cor}">${deltaConta >= 0 ? '+' : ''}${deltaConta.toFixed(1)}%${sufixoAlav}</span>`;
                 }
                 el.innerHTML = html;
                 el.className = 'live-price';
@@ -957,6 +968,7 @@
                 status: document.getElementById('input-status').value,
                 valor: parseFloat(document.getElementById('input-valor').value),
                 preco_entrada: document.getElementById('input-preco').value ? parseFloat(document.getElementById('input-preco').value) : null,
+                alavancagem: parseFloat(document.getElementById('input-leverage').value) || 1,
                 ganho: parseFloat(document.getElementById('input-ganho').value) || 0,
                 notas: document.getElementById('input-notas').value.trim(),
             };
@@ -987,6 +999,7 @@
             document.getElementById('input-data').value = op.data; document.getElementById('input-moeda').value = op.moeda;
             document.getElementById('input-acao').value = op.acao; document.getElementById('input-valor').value = op.valor;
             document.getElementById('input-preco').value = op.preco_entrada ?? '';
+            document.getElementById('input-leverage').value = op.alavancagem || 1;
             document.getElementById('input-ganho').value = op.ganho;
             document.getElementById('input-status').value = op.status || 'fechada';
             document.getElementById('input-notas').value = op.notas || '';
@@ -1001,6 +1014,7 @@
             document.getElementById('input-status').value = 'fechada'; onStatusChange();
             document.getElementById('input-notas').value = '';
             document.getElementById('input-preco').value = '';
+            document.getElementById('input-leverage').value = '50';
             editandoId = null; document.getElementById('btn-submit').innerText = "Adicionar";
             document.getElementById('btn-submit').style.background = "linear-gradient(90deg, var(--cyan), var(--violet))";
         }
@@ -1015,7 +1029,7 @@
             let decimais = 2;
             if (n < 0.00001) decimais = 8;
             else if (n < 0.01) decimais = 6;
-            else if (n < 1) decimais = 4;
+            else if (n < 10) decimais = 4;
             return '$' + n.toFixed(decimais);
         }
 
@@ -1043,6 +1057,7 @@
                     <td><span class="badge ${cAcao}">${op.acao}</span></td>
                     <td><span class="badge ${status}">${status === 'aberta' ? 'ABERTA' : 'FECHADA'}</span></td>
                     <td>${formatPreco(op.preco_entrada)}</td>
+                    <td>${op.alavancagem || 1}x</td>
                     <td>${formatMoney(op.valor)}</td>
                     <td class="${cRes}">${op.ganho > 0 ? '+' : ''}${op.ganho}%</td>
                     <td class="${cRes}" style="font-weight: 700;">${op.ganho > 0 ? '+' : ''}${formatMoney(res)}</td>
