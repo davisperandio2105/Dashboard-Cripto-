@@ -379,10 +379,11 @@
                 <div id="view-dashboard" class="view-section active">
 
                     <div class="kpi-strip">
-                        <div class="kpi-mini hud">
+                        <div class="kpi-mini hud" style="position: relative;">
                             <span class="kpi-title">Resultado líquido</span>
                             <div class="kpi-value" id="kpi-resultado">$0.00</div>
                             <span class="kpi-sub" id="kpi-resultado-sub">período atual</span>
+                            <button onclick="toggleMoeda()" id="btn-moeda" style="position: absolute; top: 14px; right: 14px; background: var(--cyan-dim); border: 1px solid rgba(34,211,238,0.3); color: var(--cyan); padding: 3px 9px; border-radius: 3px; cursor: pointer; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.04em; font-family: 'JetBrains Mono';">BRL</button>
                         </div>
                         <div class="kpi-mini hud">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
@@ -514,6 +515,7 @@
 
         let operacoes = []; let chartPnL = null; let chartAlloc = null;
         let editandoId = null; let usuarioAtual = null;
+        let cotacaoDolar = 5.0; let exibirEmReal = false;
         let notaEditandoId = null;
         let notaContexto = 'operacao';
         let watchlist = [];
@@ -536,6 +538,7 @@
             const mesFormatado = hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0');
             document.getElementById('filtro-mes').value = mesFormatado;
             document.getElementById('input-data').valueAsDate = hoje;
+            buscarCotacaoDolar();
 
             const { data: { session } } = await supabaseClient.auth.getSession();
             tratarSessao(session);
@@ -578,6 +581,20 @@
             operacoes = [];
             document.getElementById('auth-email').value = '';
             document.getElementById('auth-senha').value = '';
+        }
+
+        async function buscarCotacaoDolar() {
+            try {
+                const res = await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL');
+                const data = await res.json();
+                cotacaoDolar = parseFloat(data.USDBRL.bid);
+            } catch (e) { /* mantém o valor padrão se a API falhar */ }
+        }
+
+        function toggleMoeda() {
+            exibirEmReal = !exibirEmReal;
+            document.getElementById('btn-moeda').innerText = exibirEmReal ? "USD" : "BRL";
+            atualizarDashboard();
         }
 
         function showToast(message, type = 'success') {
@@ -1182,7 +1199,7 @@
             const titleMel = document.getElementById('title-melhor-moeda'); const elMel = document.getElementById('kpi-melhor-moeda');
 
             if (ops.length === 0) {
-                elRes.innerText = "$0.00"; elRes.className = "kpi-value";
+                elRes.innerText = exibirEmReal ? "R$0,00" : "$0.00"; elRes.className = "kpi-value";
                 document.getElementById('kpi-volume').innerText = "$0.00";
                 document.getElementById('kpi-volume-sub').innerText = "0 operações fechadas";
                 titleMel.innerText = "Melhor ativo"; elMel.innerText = "---"; elMel.className = "kpi-value";
@@ -1205,7 +1222,13 @@
                 pnlDia[op.data] = (pnlDia[op.data] || 0) + r;
             });
 
-            elRes.innerText = formatMoney(resLiq);
+            if (exibirEmReal) {
+                elRes.innerText = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(resLiq * cotacaoDolar);
+                document.getElementById('kpi-resultado-sub').innerText = `Cotação: R$ ${cotacaoDolar.toFixed(2).replace('.', ',')}`;
+            } else {
+                elRes.innerText = formatMoney(resLiq);
+                document.getElementById('kpi-resultado-sub').innerText = 'período atual';
+            }
             elRes.className = resLiq > 0 ? "kpi-value text-success" : (resLiq < 0 ? "kpi-value text-danger" : "kpi-value");
             document.getElementById('kpi-volume').innerText = formatMoney(vol);
             document.getElementById('kpi-volume-sub').innerText = `${ops.length} operações fechadas`;
