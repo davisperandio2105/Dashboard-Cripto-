@@ -1211,12 +1211,13 @@
                 return;
             }
 
-            let resLiq = 0, vol = 0, somaGanho = 0; const moedas = {}; const volPorMoeda = {}; const pnlDia = {};
+            let resLiq = 0, vol = 0, vitorias = 0; const moedas = {}; const volPorMoeda = {}; const pnlDia = {};
             let opsOrdenadasPorData = [...ops].sort((a, b) => new Date(a.data) - new Date(b.data));
 
             opsOrdenadasPorData.forEach(op => {
                 const r = calcularResultado(op.valor, op.ganho);
-                resLiq += r; vol += op.valor; somaGanho += op.ganho;
+                resLiq += r; vol += op.valor;
+                if (r > 0) vitorias++;
                 moedas[op.moeda] = (moedas[op.moeda] || 0) + r;
                 volPorMoeda[op.moeda] = (volPorMoeda[op.moeda] || 0) + op.valor;
                 pnlDia[op.data] = (pnlDia[op.data] || 0) + r;
@@ -1233,11 +1234,11 @@
             document.getElementById('kpi-volume').innerText = formatMoney(vol);
             document.getElementById('kpi-volume-sub').innerText = `${ops.length} operações fechadas`;
 
-            const media = somaGanho / ops.length;
+            const assertividade = (vitorias / ops.length) * 100;
             const elMedia = document.getElementById('kpi-media');
-            elMedia.innerText = `${media > 0 ? '+' : ''}${media.toFixed(2)}%`;
-            elMedia.className = "kpi-value " + (media >= 0 ? "text-success" : "text-danger");
-            document.getElementById('kpi-media-sub').innerText = `${ops.length} operações fechadas`;
+            elMedia.innerText = `${assertividade.toFixed(1)}%`;
+            elMedia.className = "kpi-value " + (assertividade >= 50 ? "text-success" : "text-danger");
+            document.getElementById('kpi-media-sub').innerText = `${vitorias} de ${ops.length} operações`;
 
             let maxPnl = -Infinity; let melhorMoeda = '---';
             for (const [m, p] of Object.entries(moedas)) { if (p > maxPnl) { maxPnl = p; melhorMoeda = m; } }
