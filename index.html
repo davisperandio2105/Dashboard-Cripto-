@@ -153,6 +153,12 @@
         .filter-input:focus { border-color: var(--cyan); }
         .filter-input option { background-color: var(--panel-solid); color: var(--text-main); }
         .filter-label { font-size: 0.66rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
+        .filter-group { display: flex; flex-direction: column; gap: 5px; }
+        .filter-group .filter-input { width: 140px; }
+        @media (max-width: 600px) {
+            .filter-group .filter-input { width: 100%; }
+            .filter-group { flex: 1 1 calc(50% - 6px); min-width: 130px; }
+        }
 
         .container { padding: 28px 32px 48px; max-width: 1320px; width: 100%; margin: 0 auto; }
         .view-section { display: none; animation: fadeIn 0.4s ease; }
@@ -325,6 +331,22 @@
             .kpi-strip { grid-template-columns: 1fr 1fr; }
             .form-row { grid-template-columns: 1fr 1fr; }
         }
+        @media (max-width: 600px) {
+            .sidebar { width: 56px; padding: 16px 0; gap: 4px; }
+            .sidebar .bolt { margin-bottom: 16px; font-size: 1.1rem; }
+            .side-btn { width: 38px; height: 38px; }
+            .topbar { padding: 14px 14px; }
+            .topbar h2 { font-size: 1.1rem; }
+            .container { padding: 16px 12px 32px; }
+            .kpi-strip { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .kpi-mini { padding: 12px 12px; }
+            .form-card, .panel { padding: 14px; }
+            .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            table { min-width: 720px; }
+            .op-row { grid-template-columns: 1fr; row-gap: 8px; }
+            .op-right { justify-self: start; }
+            .pos-row { flex-wrap: wrap; gap: 6px; }
+        }
         @media (min-width: 1001px) and (max-width: 1240px) {
             .kpi-strip { grid-template-columns: repeat(3, 1fr); }
         }
@@ -371,19 +393,27 @@
                     <h2 id="topbar-title">Dashboard</h2>
                     <p id="topbar-sub">Acompanhamento de operações e performance</p>
                 </div>
-                <div id="topbar-filters" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                    <span class="filter-label">Mês</span>
-                    <input type="month" id="filtro-mes" class="filter-input" onchange="document.getElementById('filtro-dia').value=''; atualizarDashboard()">
-                    <span class="filter-label">Ou dia</span>
-                    <input type="date" id="filtro-dia" class="filter-input" onchange="document.getElementById('filtro-mes').value=''; atualizarDashboard()">
-                    <span class="filter-label">Ativo</span>
-                    <select id="filtro-moeda" class="filter-input" onchange="atualizarDashboard()" style="width: 120px;"><option value="">Todos</option></select>
-                    <span class="filter-label">Status</span>
-                    <select id="filtro-status" class="filter-input" onchange="atualizarDashboard()" style="width: 120px;">
-                        <option value="">Todos</option>
-                        <option value="aberta">Abertas</option>
-                        <option value="fechada">Fechadas</option>
-                    </select>
+                <div id="topbar-filters" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+                    <div class="filter-group">
+                        <span class="filter-label">Mês</span>
+                        <input type="month" id="filtro-mes" class="filter-input" onchange="document.getElementById('filtro-dia').value=''; atualizarDashboard()">
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-label">Ou dia</span>
+                        <input type="date" id="filtro-dia" class="filter-input" onchange="document.getElementById('filtro-mes').value=''; atualizarDashboard()">
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-label">Ativo</span>
+                        <select id="filtro-moeda" class="filter-input" onchange="atualizarDashboard()"><option value="">Todos</option></select>
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-label">Status</span>
+                        <select id="filtro-status" class="filter-input" onchange="atualizarDashboard()">
+                            <option value="">Todos</option>
+                            <option value="aberta">Abertas</option>
+                            <option value="fechada">Fechadas</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
